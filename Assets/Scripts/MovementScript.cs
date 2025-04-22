@@ -32,6 +32,7 @@ public class MovementScript : MonoBehaviour
 
     Rigidbody rb;
 
+    public CombatScript combatScript;
     public MovementState state;
     public OptionState optionState = OptionState.idle;
     public enum MovementState
@@ -52,6 +53,7 @@ public class MovementScript : MonoBehaviour
     private void Start()
     {
         rb = GetComponent<Rigidbody>();
+        combatScript = GetComponent<CombatScript>();
         actionable = true;
     }
     private void Update()
@@ -155,7 +157,8 @@ public class MovementScript : MonoBehaviour
         rollTimer = rollTime;
 
         rb.linearVelocity = Vector3.zero;
-        rb.AddForce(inputDir * 35, ForceMode.VelocityChange);
+        
+        rb.AddForce(inputDir * 25 * Time.deltaTime, ForceMode.Impulse);
     }
     
     public void EndRoll()
@@ -180,6 +183,7 @@ public class MovementScript : MonoBehaviour
         }
 
         yield return new WaitForSeconds(duration);
+        combatScript.AttackHitbox();
         actionable = true;
     }
     private void MovePlayer()
