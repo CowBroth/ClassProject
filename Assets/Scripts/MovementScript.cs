@@ -7,6 +7,8 @@ public class MovementScript : MonoBehaviour
     public float sprintSpeed;
     public float attackDuration = 0.66f;
     public float blockSpeed;
+    public float turnSmoothTime = 0.1f;
+    float turnSmoothVelocity;
 
     public KeyCode attackKey = KeyCode.Mouse0;
     public KeyCode blockKey = KeyCode.F;
@@ -30,8 +32,9 @@ public class MovementScript : MonoBehaviour
     bool grounded;
     public float groundDrag;
 
-    Rigidbody rb;
-
+    public Animator anim;
+    CharacterController cc;
+    public Transform cam;
     public CombatScript combatScript;
     public MovementState state;
     public OptionState optionState = OptionState.idle;
@@ -52,26 +55,17 @@ public class MovementScript : MonoBehaviour
 
     private void Start()
     {
-        rb = GetComponent<Rigidbody>();
+        cc = GetComponent<CharacterController>();
         combatScript = GetComponent<CombatScript>();
         actionable = true;
     }
     private void Update()
     {
+        Vector3 direction = new Vector3(horizontalInput, 0f, verticalInput).normalized;
         grounded = Physics.Raycast(transform.position, Vector3.down, playerHeight * 0.5f + 0.2f, whatIsGround);
 
         MyInput();
-
-        if (grounded)
-        {
-            rb.linearDamping = groundDrag;
-        }
-        else
-        {
-            rb.linearDamping = 0;
-        }
-
-        SpeedControl();
+        MovePlayer();
 
         if (actionable)
         {
@@ -86,15 +80,10 @@ public class MovementScript : MonoBehaviour
             }
         }
     }
-    private void FixedUpdate()
+    public void MyInput()
     {
-        MovePlayer();
-    }
-
-    private void MyInput()
-    {
-        horizontalInput = Input.GetAxisRaw("Horizontal");
-        verticalInput = Input.GetAxisRaw("Vertical");
+        horizontalInput = Input.GetAxis("Horizontal");
+        verticalInput = Input.GetAxis("Vertical");
     }
 
     private void StateHandler()
@@ -132,7 +121,21 @@ public class MovementScript : MonoBehaviour
         {
             optionState = OptionState.idle;
         }
-        
+    }
+    public void MovePlayer()
+    {
+        Vector3 direction = new Vector3(horizontalInput, 0f, verticalInput).normalized;
+
+        if (direction.magnitude >= 0.1f)
+        {
+            float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + cam.eulerAngles.y;
+            float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref turnSmoothVelocity, turnSmoothTime);
+            transform.rotation = Quaternion.Euler(0f, angle, 0f);
+
+            Vector3 moveDir = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
+
+            cc.Move(moveDir.normalized * moveSpeed * Time.deltaTime);
+        }
     }
 
     public void AttackMethod()
@@ -156,9 +159,7 @@ public class MovementScript : MonoBehaviour
 
         rollTimer = rollTime;
 
-        rb.linearVelocity = Vector3.zero;
         
-        rb.AddForce(inputDir * 25 * Time.deltaTime, ForceMode.Impulse);
     }
     
     public void EndRoll()
@@ -186,21 +187,5 @@ public class MovementScript : MonoBehaviour
         combatScript.AttackHitbox();
         actionable = true;
     }
-    private void MovePlayer()
-    {
-        moveDirection = orientation.forward * verticalInput + orientation.right * horizontalInput;
-        
-        rb.AddForce(moveDirection.normalized * moveSpeed * 10f, ForceMode.Force);
-    }
 
-    private void SpeedControl()
-    {
-        Vector3 flatVel = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
-
-        if (flatVel.magnitude > moveSpeed)
-        {
-            Vector3 limitedVel = flatVel.normalized * moveSpeed;
-            rb.linearVelocity = new Vector3(limitedVel.x, rb.linearVelocity.y, limitedVel.z);
-        }
-    }
 }
