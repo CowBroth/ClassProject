@@ -1,4 +1,6 @@
+using System;
 using System.Collections;
+using UnityEditor;
 using UnityEngine;
 public class MovementScript : MonoBehaviour
 {
@@ -7,7 +9,7 @@ public class MovementScript : MonoBehaviour
     public float sprintSpeed;
     public float attackDuration = 0.66f;
     public float blockSpeed;
-    public float turnSmoothTime = 0.1f;
+    public float turnSmoothTime = 1f;
     float turnSmoothVelocity;
 
     public KeyCode attackKey = KeyCode.Mouse0;
@@ -16,6 +18,9 @@ public class MovementScript : MonoBehaviour
     public KeyCode rollKey = KeyCode.Q;
 
     public Transform orientation;
+    public int moveAnim;
+    public int optionAnim;
+    public bool stillAnim;
 
     float horizontalInput;
     float verticalInput;
@@ -23,19 +28,17 @@ public class MovementScript : MonoBehaviour
     Vector3 inputDir;
 
     public bool actionable;
-    public bool rollCoolDown;
-    public float rollTimer = 0;
-    public float rollTime = 0.6f;
 
     public float playerHeight;
     public LayerMask whatIsGround;
     bool grounded;
     public float groundDrag;
+    public Vector3 direction;
+    Vector3 velocity;
 
     public Animator anim;
     CharacterController cc;
     public Transform cam;
-    public CombatScript combatScript;
     public MovementState state;
     public OptionState optionState = OptionState.idle;
     public enum MovementState
@@ -56,34 +59,32 @@ public class MovementScript : MonoBehaviour
     private void Start()
     {
         cc = GetComponent<CharacterController>();
-        combatScript = GetComponent<CombatScript>();
         actionable = true;
     }
     private void Update()
     {
-        Vector3 direction = new Vector3(horizontalInput, 0f, verticalInput).normalized;
-        grounded = Physics.Raycast(transform.position, Vector3.down, playerHeight * 0.5f + 0.2f, whatIsGround);
-
+        grounded = Physics.Raycast(transform.position, Vector3.down, playerHeight, whatIsGround);
+        
+       
         MyInput();
         MovePlayer();
-
         if (actionable)
         {
             StateHandler();
         }
-        if (!actionable && optionState == OptionState.roll)
-        {
-            rollTimer -= Time.deltaTime;
-            if (rollTimer <= 0)
-            {
-                EndRoll();
-            }
-        }
+       
+        moveAnim = Convert.ToInt32(state);
+        optionAnim = Convert.ToInt32(optionState);
+
+        anim.SetInteger("Movement", moveAnim);
+        anim.SetInteger("Options", optionAnim);
+        anim.SetBool("Still", stillAnim);
     }
     public void MyInput()
     {
-        horizontalInput = Input.GetAxis("Horizontal");
-        verticalInput = Input.GetAxis("Vertical");
+        horizontalInput = Input.GetAxisRaw("Horizontal");
+        verticalInput = Input.GetAxisRaw("Vertical");
+        direction = new Vector3(horizontalInput, 0f, verticalInput).normalized;
     }
 
     private void StateHandler()
@@ -115,7 +116,7 @@ public class MovementScript : MonoBehaviour
         }
         else if (Input.GetKeyDown(rollKey))
         {
-            RollMethodStart();
+            
         }
         else
         {
@@ -124,8 +125,6 @@ public class MovementScript : MonoBehaviour
     }
     public void MovePlayer()
     {
-        Vector3 direction = new Vector3(horizontalInput, 0f, verticalInput).normalized;
-
         if (direction.magnitude >= 0.1f)
         {
             float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + cam.eulerAngles.y;
@@ -133,9 +132,21 @@ public class MovementScript : MonoBehaviour
             transform.rotation = Quaternion.Euler(0f, angle, 0f);
 
             Vector3 moveDir = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
+            stillAnim = false;
 
             cc.Move(moveDir.normalized * moveSpeed * Time.deltaTime);
         }
+        else
+        {
+            stillAnim = true;
+        }
+        velocity.y += -10f * Time.deltaTime;
+        if (grounded && velocity.y < 0)
+        {
+            velocity.y = 0;
+        }
+        cc.Move(velocity * Time.deltaTime);
+
     }
 
     public void AttackMethod()
@@ -145,30 +156,6 @@ public class MovementScript : MonoBehaviour
         StartCoroutine(DurationTimer(1));
     }
 
-    public void RollMethodStart()
-    {
-        optionState = OptionState.roll;
-        actionable = false;
-
-        inputDir = new Vector3(horizontalInput, 0, verticalInput).normalized;
-
-        if (inputDir == Vector3.zero)
-        {
-            inputDir = transform.forward;
-        }
-
-        rollTimer = rollTime;
-
-        
-    }
-    
-    public void EndRoll()
-    {
-        actionable = true;
-        optionState = OptionState.idle;
-        rollTimer = 0;
-    }
-
     private IEnumerator DurationTimer(int call)
     {
         actionable = false;
@@ -176,7 +163,7 @@ public class MovementScript : MonoBehaviour
 
         if (call == 1)
         {
-            duration = 0.66f;
+            duration = 1.1f;
         }
         if (call == 2)
         {
@@ -184,8 +171,6 @@ public class MovementScript : MonoBehaviour
         }
 
         yield return new WaitForSeconds(duration);
-        combatScript.AttackHitbox();
         actionable = true;
     }
-
 }

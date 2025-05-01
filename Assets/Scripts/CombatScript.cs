@@ -3,10 +3,12 @@ using UnityEngine;
 public class CombatScript : MonoBehaviour
 {
     public GameObject attackHitbox;
-    public Transform attackPosition;
-
-    public void AttackHitbox()
+    public void AttackStart()
     {
-        Instantiate(attackHitbox, attackPosition.position, gameObject.transform.rotation);
+        attackHitbox.SetActive(true);
+    }
+    public void AttackEnd()
+    {
+        attackHitbox.SetActive(false);
     }
 }
