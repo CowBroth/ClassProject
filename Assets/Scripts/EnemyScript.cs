@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using UnityEngine;
 
@@ -13,6 +14,8 @@ public class EnemyScript : MonoBehaviour
     public LayerMask playerLayer;
     public bool attackRange;
     CombatScript combatScript;
+    [SerializeField] Vector3 lookAt;
+    bool playerBlocking;
     void Start()
     {
         detectionRadius = GetComponentInChildren<SphereCollider>();
@@ -23,10 +26,13 @@ public class EnemyScript : MonoBehaviour
     public enum BehaviourState
     {
         idle,
-        aggro
+        aggro,
+        attacking,
+        stunned
     }
     private void FixedUpdate()
     {
+        playerBlocking = playerScript.blocking;
         EnemyState();
     }
     private void OnTriggerStay(Collider other)
@@ -42,6 +48,7 @@ public class EnemyScript : MonoBehaviour
     void EnemyState()
     {
         Vector3 playerDirection = (player.position - transform.position).normalized;
+        lookAt = new Vector3(player.position.x, transform.position.y, player.position.z);
         if (state == BehaviourState.idle)
         {
             anim.SetBool("Still", true);
@@ -49,13 +56,24 @@ public class EnemyScript : MonoBehaviour
         else if (state == BehaviourState.aggro && !attackRange)
         {
             rb.AddForce(playerDirection * speed);
-            rb.MoveRotation(Quaternion.LookRotation(playerDirection));
+            transform.LookAt(lookAt);
+            
             anim.SetBool("Still", false);
         }
         else if (state == BehaviourState.aggro && attackRange)
         {
-            rb.MoveRotation(Quaternion.LookRotation(playerDirection));
+            transform.LookAt(lookAt);
+            if (actionable)
+            {
+                state = BehaviourState.attacking;
+                anim.SetTrigger("Attack");
+                StartCoroutine(DurationTimer());
+            }
         }
+    }
+    public void EnemyAttack()
+    {
+
     }
     private IEnumerator DurationTimer()
     {
@@ -63,5 +81,6 @@ public class EnemyScript : MonoBehaviour
         float duration = 1.1f;
         yield return new WaitForSeconds(duration);
         actionable = true;
+        state = BehaviourState.aggro;
     }
 }

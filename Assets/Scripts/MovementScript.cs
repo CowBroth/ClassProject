@@ -32,6 +32,7 @@ public class MovementScript : MonoBehaviour
     public float playerHeight;
     public LayerMask whatIsGround;
     bool grounded;
+    public float gravityValue;
     public float groundDrag;
     public Vector3 direction;
     Vector3 velocity;
@@ -41,6 +42,7 @@ public class MovementScript : MonoBehaviour
     public Transform cam;
     public MovementState state;
     public OptionState optionState = OptionState.idle;
+    public bool blocking;
     public enum MovementState
     {
         walking,
@@ -52,7 +54,7 @@ public class MovementScript : MonoBehaviour
     {
         attack,
         block,
-        roll,
+        stunned,
         idle
     }
 
@@ -63,10 +65,17 @@ public class MovementScript : MonoBehaviour
     }
     private void Update()
     {
-        grounded = Physics.Raycast(transform.position, Vector3.down, playerHeight, whatIsGround);
-        
-       
-        MyInput();
+        grounded = cc.isGrounded;
+        if (optionState == OptionState.block)
+        {
+            blocking = true;
+        }
+        else
+        {
+            blocking = false;
+        }
+
+            MyInput();
         MovePlayer();
         if (actionable)
         {
@@ -114,10 +123,6 @@ public class MovementScript : MonoBehaviour
             optionState = OptionState.block;
             moveSpeed = blockSpeed;
         }
-        else if (Input.GetKeyDown(rollKey))
-        {
-            
-        }
         else
         {
             optionState = OptionState.idle;
@@ -140,13 +145,15 @@ public class MovementScript : MonoBehaviour
         {
             stillAnim = true;
         }
-        velocity.y += -10f * Time.deltaTime;
-        if (grounded && velocity.y < 0)
+        if (grounded && velocity.y < 0.0f)
         {
-            velocity.y = 0;
+            velocity.y = -0.05f;
         }
-        cc.Move(velocity * Time.deltaTime);
-
+        else
+        {
+            velocity.y += gravityValue * Time.deltaTime;
+        }
+        cc.Move(velocity);
     }
 
     public void AttackMethod()
@@ -154,6 +161,13 @@ public class MovementScript : MonoBehaviour
         optionState = OptionState.attack;
         moveSpeed = walkSpeed;
         StartCoroutine(DurationTimer(1));
+    }
+
+    public void PlayerHit()
+    {
+        optionState = OptionState.stunned;
+        moveSpeed = 4f;
+        StartCoroutine(DurationTimer(2));
     }
 
     private IEnumerator DurationTimer(int call)
@@ -167,7 +181,7 @@ public class MovementScript : MonoBehaviour
         }
         if (call == 2)
         {
-            duration = 0.33f;
+            duration = 0.75f;
         }
 
         yield return new WaitForSeconds(duration);
