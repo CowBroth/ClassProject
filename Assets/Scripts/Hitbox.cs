@@ -6,7 +6,7 @@ public class Hitbox : MonoBehaviour
     {
         if (other.gameObject.CompareTag("Enemy"))
         {
-            print("Hit!");
+            other.GetComponent<EnemyScript>().OnStun(0);
         }
     }
 }

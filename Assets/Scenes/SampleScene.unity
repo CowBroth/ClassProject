@@ -332,7 +332,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   actionable: 1
-  speed: 62.5
+  stunned: 0
+  speed: 70
   player: {fileID: 298725903}
   state: 0
   playerLayer:
@@ -340,7 +341,7 @@ MonoBehaviour:
     m_Bits: 8
   attackRange: 0
   lookAt: {x: 0, y: 0, z: 0}
-  playerScript: {fileID: 298725908}
+  parried: 0
 --- !u!54 &234439469
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -427,8 +428,8 @@ MonoBehaviour:
   sprintKey: 304
   rollKey: 113
   orientation: {fileID: 230825147}
-  moveAnim: 0
-  optionAnim: 0
+  moveEnumInt: 0
+  optionEnumInt: 0
   stillAnim: 0
   actionable: 0
   playerHeight: 0.175
@@ -443,6 +444,8 @@ MonoBehaviour:
   state: 0
   optionState: 0
   blocking: 0
+  parrying: 0
+  stunned: 0
 --- !u!114 &298725909
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -456,6 +459,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   attackHitbox: {fileID: 952077343656794332, guid: 5746049e5182de248b5c6cb94aabb456, type: 3}
+  movementScript: {fileID: 0}
 --- !u!143 &298725910
 CharacterController:
   m_ObjectHideFlags: 0
@@ -545,8 +549,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 2.06, y: 1, z: 3.43}
-  m_Center: {x: 0, y: 0, z: 0.15}
+  m_Size: {x: 1.87, y: 1, z: 1.88}
+  m_Center: {x: 0, y: 0, z: -0.49}
 --- !u!1 &705507993
 GameObject:
   m_ObjectHideFlags: 0
@@ -1405,6 +1409,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   attackHitbox: {fileID: 3497231898175308110}
+  movementScript: {fileID: 0}
 --- !u!1 &1532100617
 GameObject:
   m_ObjectHideFlags: 0
@@ -1708,6 +1713,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   attackHitbox: {fileID: 952077344520220039}
+  movementScript: {fileID: 0}
 --- !u!1 &952077344520220039
 GameObject:
   m_ObjectHideFlags: 0
@@ -1752,8 +1758,8 @@ Transform:
   m_GameObject: {fileID: 3497231898175308110}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.7, z: 1.25}
-  m_LocalScale: {x: 2, y: 0.95, z: 1.5}
+  m_LocalPosition: {x: 0, y: 0.7, z: 1.33}
+  m_LocalScale: {x: 2, y: 0.95, z: 2.22}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1411785775}
@@ -1785,7 +1791,7 @@ MeshRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 952077344520220039}
-  m_Enabled: 1
+  m_Enabled: 0
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
@@ -1900,7 +1906,7 @@ MeshRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3497231898175308110}
-  m_Enabled: 1
+  m_Enabled: 0
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1

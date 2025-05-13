@@ -18,8 +18,8 @@ public class MovementScript : MonoBehaviour
     public KeyCode rollKey = KeyCode.Q;
 
     public Transform orientation;
-    public int moveAnim;
-    public int optionAnim;
+    public int moveEnumInt;
+    public int optionEnumInt;
     public bool stillAnim;
 
     float horizontalInput;
@@ -43,6 +43,8 @@ public class MovementScript : MonoBehaviour
     public MovementState state;
     public OptionState optionState = OptionState.idle;
     public bool blocking;
+    public bool parrying;
+    public bool stunned;
     public enum MovementState
     {
         walking,
@@ -77,17 +79,18 @@ public class MovementScript : MonoBehaviour
 
             MyInput();
         MovePlayer();
-        if (actionable)
+        if (actionable && !stunned)
         {
             StateHandler();
         }
        
-        moveAnim = Convert.ToInt32(state);
-        optionAnim = Convert.ToInt32(optionState);
+        moveEnumInt = Convert.ToInt32(state);
+        optionEnumInt = Convert.ToInt32(optionState);
 
-        anim.SetInteger("Movement", moveAnim);
-        anim.SetInteger("Options", optionAnim);
+        anim.SetInteger("Movement", moveEnumInt);
+        anim.SetInteger("Options", optionEnumInt);
         anim.SetBool("Still", stillAnim);
+        anim.SetBool("Stunned", stunned);
     }
     public void MyInput()
     {
@@ -165,9 +168,7 @@ public class MovementScript : MonoBehaviour
 
     public void PlayerHit()
     {
-        optionState = OptionState.stunned;
-        moveSpeed = 4f;
-        StartCoroutine(DurationTimer(2));
+        StartCoroutine(StunTimer());
     }
 
     private IEnumerator DurationTimer(int call)
@@ -186,5 +187,13 @@ public class MovementScript : MonoBehaviour
 
         yield return new WaitForSeconds(duration);
         actionable = true;
+    }
+    private IEnumerator StunTimer()
+    {
+        stunned = true;
+        moveSpeed = 4f;
+        float d = 0.33f;
+        yield return new WaitForSeconds(d);
+        stunned = false;
     }
 }

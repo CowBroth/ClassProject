@@ -5,6 +5,7 @@ using UnityEngine;
 public class EnemyScript : MonoBehaviour
 {
     public bool actionable = true;
+    public bool stunned = false;
     public float speed;
     public Transform player;
     Animator anim;
@@ -16,6 +17,7 @@ public class EnemyScript : MonoBehaviour
     CombatScript combatScript;
     [SerializeField] Vector3 lookAt;
     bool playerBlocking;
+    public bool parried;
     void Start()
     {
         detectionRadius = GetComponentInChildren<SphereCollider>();
@@ -32,18 +34,30 @@ public class EnemyScript : MonoBehaviour
     }
     private void FixedUpdate()
     {
-        playerBlocking = playerScript.blocking;
-        EnemyState();
+        if (!stunned)
+        {
+            EnemyState();
+        }
+        else
+        {
+            state = BehaviourState.stunned;
+        }
+        anim.SetBool("Stunned", stunned);
+        anim.SetBool("Parried", parried);
     }
     private void OnTriggerStay(Collider other)
     {
-        state = BehaviourState.aggro;
-        print(state);
+        if (!stunned)
+        {
+            state = BehaviourState.aggro;
+        }
     }
     private void OnTriggerExit(Collider other)
     {
-        state = BehaviourState.idle;
-        print(state);
+        if (!stunned)
+        {
+            state = BehaviourState.idle;
+        }
     }
     void EnemyState()
     {
@@ -71,16 +85,38 @@ public class EnemyScript : MonoBehaviour
             }
         }
     }
-    public void EnemyAttack()
+    public void OnStun(int i)
     {
-
+        if (i == 0)
+        {
+            StartCoroutine(StunTimer(0));
+        }
+        if (i == 1)
+        {
+            parried = true;
+            StartCoroutine(StunTimer(1));
+        }
     }
     private IEnumerator DurationTimer()
     {
+        speed = 35;
         actionable = false;
         float duration = 1.1f;
         yield return new WaitForSeconds(duration);
         actionable = true;
         state = BehaviourState.aggro;
+        speed = 70;
+    }
+    private IEnumerator StunTimer(int i)
+    {
+        stunned = true;
+        float duration = 0.66f;
+        if(i == 0)
+        {
+            duration = 0.125f;
+        }
+        yield return new WaitForSeconds(duration);
+        stunned = false;
+        parried = false;
     }
 }
