@@ -4,9 +4,13 @@ using UnityEngine;
 
 public class EnemyScript : MonoBehaviour
 {
+    [Header("Values")]
+    public float hitPoints;
+    public float speed;
+    [SerializeField] private float effectiveRange;
+
     public bool actionable = true;
     public bool stunned = false;
-    public float speed;
     public Transform player;
     Animator anim;
     Rigidbody rb;
@@ -18,6 +22,7 @@ public class EnemyScript : MonoBehaviour
     [SerializeField] Vector3 lookAt;
     bool playerBlocking;
     public bool parried;
+    public float currentSpeed;
     void Start()
     {
         detectionRadius = GetComponentInChildren<SphereCollider>();
@@ -61,7 +66,7 @@ public class EnemyScript : MonoBehaviour
     }
     void EnemyState()
     {
-        Vector3 playerDirection = (player.position - transform.position).normalized;
+        Vector3 playerDirection = (new Vector3(player.position.x, transform.position.y, player.position.z) - transform.position).normalized;
         lookAt = new Vector3(player.position.x, transform.position.y, player.position.z);
         if (state == BehaviourState.idle)
         {
@@ -76,6 +81,15 @@ public class EnemyScript : MonoBehaviour
         }
         else if (state == BehaviourState.aggro && attackRange)
         {
+            //currentSpeed = speed / Vector3.Distance(transform.position, player.position);
+            if (Vector3.Distance(transform.position, player.position) >= effectiveRange)
+            {
+                rb.AddForce(playerDirection * speed);
+            }
+            if (Vector3.Distance(transform.position, player.position) <= effectiveRange)
+            {
+                rb.AddForce(new Vector3(playerDirection.x + 3.25f, playerDirection.z + 3.25f).normalized);
+            }
             transform.LookAt(lookAt);
             if (actionable)
             {
@@ -89,6 +103,15 @@ public class EnemyScript : MonoBehaviour
     {
         if (i == 0)
         {
+            hitPoints -= 25;
+            actionable = true;
+            if (hitPoints <= 0)
+            {
+                rb.freezeRotation = false;
+                GetComponentInChildren<Animator>().enabled = false;
+                rb.AddForce(new Vector3(0, 0, 75), ForceMode.Impulse);
+                Destroy(this);
+            }
             StartCoroutine(StunTimer(0));
         }
         if (i == 1)
@@ -99,13 +122,11 @@ public class EnemyScript : MonoBehaviour
     }
     private IEnumerator DurationTimer()
     {
-        speed = 35;
         actionable = false;
         float duration = 1.1f;
         yield return new WaitForSeconds(duration);
         actionable = true;
         state = BehaviourState.aggro;
-        speed = 70;
     }
     private IEnumerator StunTimer(int i)
     {
@@ -118,5 +139,6 @@ public class EnemyScript : MonoBehaviour
         yield return new WaitForSeconds(duration);
         stunned = false;
         parried = false;
+        actionable = true;
     }
 }

@@ -23,7 +23,7 @@ public class CombatScript : MonoBehaviour
     }
     public IEnumerator ParryTimer()
     {
-        float t = 0.10f;
+        float t = 0.15f;
         movementScript.parrying = true;
         yield return new WaitForSeconds(t);
         movementScript.parrying = false;

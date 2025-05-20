@@ -24,6 +24,7 @@ public class EnemyHitbox : MonoBehaviour
                 if (playerScript.parrying)
                 {
                     enemyScript.OnStun(1);
+                    playerScript.OnParry();
                     print("parried!");
                 }
                 else

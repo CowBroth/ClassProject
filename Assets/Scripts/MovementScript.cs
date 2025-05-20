@@ -1,9 +1,11 @@
 using System;
 using System.Collections;
+using Unity.Cinemachine;
 using UnityEditor;
 using UnityEngine;
 public class MovementScript : MonoBehaviour
 {
+    public float hitPoints = 100;
     private float moveSpeed = 5f;
     public float walkSpeed;
     public float sprintSpeed;
@@ -16,6 +18,7 @@ public class MovementScript : MonoBehaviour
     public KeyCode blockKey = KeyCode.F;
     public KeyCode sprintKey = KeyCode.LeftShift;
     public KeyCode rollKey = KeyCode.Q;
+    public KeyCode lockKey = KeyCode.Tab;
 
     public Transform orientation;
     public int moveEnumInt;
@@ -37,14 +40,19 @@ public class MovementScript : MonoBehaviour
     public Vector3 direction;
     Vector3 velocity;
 
+    public GameObject corpse;
     public Animator anim;
     CharacterController cc;
-    public Transform cam;
+    public GameObject cam;
     public MovementState state;
     public OptionState optionState = OptionState.idle;
     public bool blocking;
     public bool parrying;
     public bool stunned;
+    bool isMoving;
+    bool isLocked;
+    public CinemachineOrbitalFollow orbit;
+    private Vector3 axs;
     public enum MovementState
     {
         walking,
@@ -67,6 +75,7 @@ public class MovementScript : MonoBehaviour
     }
     private void Update()
     {
+        axs = new Vector3(0, orbit.HorizontalAxis.Value, 0);
         grounded = cc.isGrounded;
         if (optionState == OptionState.block)
         {
@@ -77,7 +86,7 @@ public class MovementScript : MonoBehaviour
             blocking = false;
         }
 
-            MyInput();
+        MyInput();
         MovePlayer();
         if (actionable && !stunned)
         {
@@ -91,6 +100,10 @@ public class MovementScript : MonoBehaviour
         anim.SetInteger("Options", optionEnumInt);
         anim.SetBool("Still", stillAnim);
         anim.SetBool("Stunned", stunned);
+        if (Input.GetKeyDown(lockKey))
+        {
+            LockMethod();
+        }
     }
     public void MyInput()
     {
@@ -133,11 +146,20 @@ public class MovementScript : MonoBehaviour
     }
     public void MovePlayer()
     {
+        if (isLocked)
+        {
+            transform.rotation = Quaternion.Euler(axs);
+        }
         if (direction.magnitude >= 0.1f)
         {
-            float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + cam.eulerAngles.y;
+            isMoving = true;
+            float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + cam.transform.eulerAngles.y;
             float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref turnSmoothVelocity, turnSmoothTime);
-            transform.rotation = Quaternion.Euler(0f, angle, 0f);
+            
+            if (!isLocked)
+            {
+                transform.rotation = Quaternion.Euler(0f, angle, 0f);
+            }
 
             Vector3 moveDir = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
             stillAnim = false;
@@ -146,6 +168,7 @@ public class MovementScript : MonoBehaviour
         }
         else
         {
+            isMoving = false;
             stillAnim = true;
         }
         if (grounded && velocity.y < 0.0f)
@@ -168,6 +191,17 @@ public class MovementScript : MonoBehaviour
 
     public void PlayerHit()
     {
+        hitPoints -= 25;
+        print(hitPoints);
+        if (hitPoints <= 0)
+        {
+            print("DEATH !!");
+            corpse.gameObject.SetActive(true);
+            corpse.transform.position = gameObject.transform.position;
+            corpse.GetComponent<Rigidbody>().AddExplosionForce(1500, new Vector3(corpse.transform.position.x, corpse.transform.position.y - 5f, corpse.transform.position.z + 5f), 500);
+            cam.GetComponent<CinemachineCamera>().Follow = corpse.transform;
+            Destroy(gameObject);
+        }
         StartCoroutine(StunTimer());
     }
 
@@ -195,5 +229,20 @@ public class MovementScript : MonoBehaviour
         float d = 0.33f;
         yield return new WaitForSeconds(d);
         stunned = false;
+    }
+    void LockMethod()
+    {
+        if (!isLocked)
+        {
+            Cursor.lockState = CursorLockMode.Locked; isLocked = true;
+        }
+        else
+        {
+            Cursor.lockState = CursorLockMode.Confined; isLocked = false;
+        }
+    }
+    public void OnParry()
+    {
+        anim.SetTrigger("Parry");
     }
 }

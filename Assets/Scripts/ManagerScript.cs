@@ -5,7 +5,6 @@ public class ManagerScript : MonoBehaviour
     public static ManagerScript instance;
     public GameObject player;
     public int playerState;
-
     void Awake()
     {
         if (instance == null)
@@ -20,6 +19,6 @@ public class ManagerScript : MonoBehaviour
     }
     void Start()
     {
-
+        //Cursor.lockState = CursorLockMode.Locked;
     }
 }
