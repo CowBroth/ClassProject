@@ -53,6 +53,7 @@ public class MovementScript : MonoBehaviour
     bool isLocked;
     public CinemachineOrbitalFollow orbit;
     private Vector3 axs;
+    RideGruv rideScript;
     public enum MovementState
     {
         walking,
@@ -71,6 +72,7 @@ public class MovementScript : MonoBehaviour
     private void Start()
     {
         cc = GetComponent<CharacterController>();
+        rideScript = GetComponent<RideGruv>();
         actionable = true;
     }
     private void Update()
@@ -85,10 +87,9 @@ public class MovementScript : MonoBehaviour
         {
             blocking = false;
         }
-
         MyInput();
         MovePlayer();
-        if (actionable && !stunned)
+        if (actionable && !stunned && !rideScript.isRiding)
         {
             StateHandler();
         }
@@ -100,6 +101,7 @@ public class MovementScript : MonoBehaviour
         anim.SetInteger("Options", optionEnumInt);
         anim.SetBool("Still", stillAnim);
         anim.SetBool("Stunned", stunned);
+        anim.SetBool("Riding", rideScript.isRiding);
         if (Input.GetKeyDown(lockKey))
         {
             LockMethod();
@@ -150,12 +152,12 @@ public class MovementScript : MonoBehaviour
         {
             transform.rotation = Quaternion.Euler(axs);
         }
-        if (direction.magnitude >= 0.1f)
+        if (direction.magnitude >= 0.1f && !rideScript.isRiding)
         {
             isMoving = true;
             float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + cam.transform.eulerAngles.y;
             float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref turnSmoothVelocity, turnSmoothTime);
-            
+
             if (!isLocked)
             {
                 transform.rotation = Quaternion.Euler(0f, angle, 0f);
@@ -171,9 +173,27 @@ public class MovementScript : MonoBehaviour
             isMoving = false;
             stillAnim = true;
         }
-        if (grounded && velocity.y < 0.0f)
+        if (rideScript.isRiding)
         {
-            velocity.y = -0.05f;
+            float targetAngle = cam.transform.eulerAngles.y;
+            float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref turnSmoothVelocity, turnSmoothTime);
+
+            if (!isLocked)
+            {
+                transform.rotation = Quaternion.Euler(0f, angle, 0f);
+            }
+
+            Vector3 moveDir = Quaternion.Euler(0f, angle, 0f) * Vector3.forward;
+
+            cc.Move(moveDir.normalized * 25 * Time.deltaTime);
+        }
+        if (grounded && velocity.y < 0.0f && !rideScript.isRiding)
+        {
+            velocity.y = -0.025f;
+        }
+        else if (grounded && rideScript.isRiding)
+        {
+            velocity.y = -0.01f;
         }
         else
         {
@@ -181,7 +201,6 @@ public class MovementScript : MonoBehaviour
         }
         cc.Move(velocity);
     }
-
     public void AttackMethod()
     {
         optionState = OptionState.attack;
