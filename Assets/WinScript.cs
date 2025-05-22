@@ -1,18 +1,11 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class WinScript : MonoBehaviour
 {
-    MeshCollider col;
-    public Transform player;
-    void Start()
+    private void OnTriggerEnter(Collider other)
     {
-        col = GetComponentInChildren<MeshCollider>();
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        if (Vector3.Distance(transform.position, player.position) < 3)
+        if (other.CompareTag("Player"))
         {
             Application.Quit();
         }

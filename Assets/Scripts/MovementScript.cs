@@ -32,10 +32,9 @@ public class MovementScript : MonoBehaviour
     Vector3 inputDir;
 
     public bool actionable;
-
+    bool grounded;
     public float playerHeight;
     public LayerMask whatIsGround;
-    bool grounded;
     public float gravityValue;
     public float groundDrag;
     public Vector3 direction;
@@ -76,10 +75,10 @@ public class MovementScript : MonoBehaviour
         rideScript = GetComponent<RideGruv>();
         actionable = true;
     }
-    private void Update()
+    public void Update()
     {
-        axs = new Vector3(0, orbit.HorizontalAxis.Value, 0);
         grounded = cc.isGrounded;
+        axs = new Vector3(0, orbit.HorizontalAxis.Value, 0);
         if (optionState == OptionState.block)
         {
             blocking = true;
@@ -94,10 +93,9 @@ public class MovementScript : MonoBehaviour
         {
             StateHandler();
         }
-       
         moveEnumInt = Convert.ToInt32(state);
         optionEnumInt = Convert.ToInt32(optionState);
-
+        Gravity();
         anim.SetInteger("Movement", moveEnumInt);
         anim.SetInteger("Options", optionEnumInt);
         anim.SetBool("Still", stillAnim);
@@ -107,6 +105,10 @@ public class MovementScript : MonoBehaviour
         {
             LockMethod();
         }
+    }
+    private void FixedUpdate()
+    {
+        //Gravity();
     }
     public void MyInput()
     {
@@ -188,19 +190,22 @@ public class MovementScript : MonoBehaviour
 
             cc.Move(moveDir.normalized * 25 * Time.deltaTime);
         }
-        if (grounded && velocity.y < 0.0f && !rideScript.isRiding)
+    }
+    void Gravity()
+    {
+        if (grounded && velocity.y <= 0.0f && !rideScript.isRiding)
         {
-            velocity.y = -0.025f;
+            velocity.y = -7.5f;
         }
         else if (grounded && rideScript.isRiding)
         {
-            velocity.y = -0.02f;
+            velocity.y = -10f;
         }
-        else
+        else if (!grounded)
         {
-            velocity.y += gravityValue * Time.deltaTime;
+            velocity.y += gravityValue * Time.fixedDeltaTime;
         }
-        cc.Move(velocity);
+        cc.Move(velocity * Time.fixedDeltaTime);
     }
     public void AttackMethod()
     {
