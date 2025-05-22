@@ -1,4 +1,7 @@
+using System.Collections;
+using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class ManagerScript : MonoBehaviour
 {
@@ -21,4 +24,14 @@ public class ManagerScript : MonoBehaviour
     {
         //Cursor.lockState = CursorLockMode.Locked;
     }
+    public void DieMethod()
+    {
+        StartCoroutine(DieTimer());
+    }
+    public IEnumerator DieTimer()
+    {
+        yield return new WaitForSeconds(5);
+        SceneManager.LoadScene(0);
+    }
+    
 }

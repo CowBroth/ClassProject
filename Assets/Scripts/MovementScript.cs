@@ -3,6 +3,7 @@ using System.Collections;
 using Unity.Cinemachine;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 public class MovementScript : MonoBehaviour
 {
     public float hitPoints = 100;
@@ -193,7 +194,7 @@ public class MovementScript : MonoBehaviour
         }
         else if (grounded && rideScript.isRiding)
         {
-            velocity.y = -0.01f;
+            velocity.y = -0.02f;
         }
         else
         {
@@ -219,9 +220,11 @@ public class MovementScript : MonoBehaviour
             corpse.transform.position = gameObject.transform.position;
             corpse.GetComponent<Rigidbody>().AddExplosionForce(1500, new Vector3(corpse.transform.position.x, corpse.transform.position.y - 5f, corpse.transform.position.z + 5f), 500);
             cam.GetComponent<CinemachineCamera>().Follow = corpse.transform;
+            ManagerScript.instance.DieMethod();
             Destroy(gameObject);
         }
         StartCoroutine(StunTimer());
+        StartCoroutine(PassiveRegen());
     }
 
     private IEnumerator DurationTimer(int call)
@@ -240,6 +243,11 @@ public class MovementScript : MonoBehaviour
 
         yield return new WaitForSeconds(duration);
         actionable = true;
+    }
+    public IEnumerator PassiveRegen()
+    {
+        yield return new WaitForSeconds(10);
+        hitPoints += 25f;
     }
     private IEnumerator StunTimer()
     {

@@ -28,4 +28,5 @@ public class CombatScript : MonoBehaviour
         yield return new WaitForSeconds(t);
         movementScript.parrying = false;
     }
+    
 }
