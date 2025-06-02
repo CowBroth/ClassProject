@@ -32,7 +32,7 @@ public class MovementScript : MonoBehaviour
     Vector3 inputDir;
 
     public bool actionable;
-    bool grounded;
+    public bool grounded;
     public float playerHeight;
     public LayerMask whatIsGround;
     public float gravityValue;
@@ -77,7 +77,7 @@ public class MovementScript : MonoBehaviour
     }
     public void Update()
     {
-        grounded = cc.isGrounded;
+        Gravity();
         axs = new Vector3(0, orbit.HorizontalAxis.Value, 0);
         if (optionState == OptionState.block)
         {
@@ -95,7 +95,6 @@ public class MovementScript : MonoBehaviour
         }
         moveEnumInt = Convert.ToInt32(state);
         optionEnumInt = Convert.ToInt32(optionState);
-        Gravity();
         anim.SetInteger("Movement", moveEnumInt);
         anim.SetInteger("Options", optionEnumInt);
         anim.SetBool("Still", stillAnim);
@@ -106,10 +105,7 @@ public class MovementScript : MonoBehaviour
             LockMethod();
         }
     }
-    private void FixedUpdate()
-    {
-        //Gravity();
-    }
+
     public void MyInput()
     {
         horizontalInput = Input.GetAxisRaw("Horizontal");
@@ -120,19 +116,15 @@ public class MovementScript : MonoBehaviour
     private void StateHandler()
     {
         
-        if (grounded && Input.GetKey(sprintKey))
+        if (Input.GetKey(sprintKey))
         {
             state = MovementState.sprinting;
             moveSpeed = sprintSpeed;
         }
-        else if (grounded)
+        else
         {
             state = MovementState.walking;
             moveSpeed = walkSpeed;
-        }
-        else
-        {
-            state = MovementState.air;
         }
 
         if (Input.GetKeyDown(attackKey))
@@ -168,7 +160,7 @@ public class MovementScript : MonoBehaviour
 
             Vector3 moveDir = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
             stillAnim = false;
-
+            print(moveDir);
             cc.Move(moveDir.normalized * moveSpeed * Time.deltaTime);
         }
         else
@@ -193,19 +185,20 @@ public class MovementScript : MonoBehaviour
     }
     void Gravity()
     {
-        if (grounded && velocity.y <= 0.0f && !rideScript.isRiding)
+        grounded = Physics.Raycast(transform.position, Vector3.down, 0.1f, whatIsGround);
+        Debug.DrawRay(transform.position, Vector3.down * 0.05f, Color.green);
+
+        if (grounded && !rideScript.isRiding)
         {
-            velocity.y = -7.5f;
+            velocity.y = -0.1f;
         }
-        else if (grounded && rideScript.isRiding)
+        if (grounded && rideScript.isRiding)
         {
             velocity.y = -10f;
         }
-        else if (!grounded)
-        {
-            velocity.y += gravityValue * Time.fixedDeltaTime;
-        }
-        cc.Move(velocity * Time.fixedDeltaTime);
+        
+        velocity.y += gravityValue * Time.deltaTime;
+        cc.Move(new Vector3(0, velocity.y * Time.deltaTime, 0));
     }
     public void AttackMethod()
     {
