@@ -5,9 +5,12 @@ public class CombatScript : MonoBehaviour
 {
     public GameObject attackHitbox;
     public MovementScript movementScript;
+    public AudioPlayer aud;
+
     void Start()
     {
         movementScript = GetComponentInParent<MovementScript>();
+        aud = GetComponentInParent<AudioPlayer>();
     }
     public void AttackStart()
     {
@@ -28,5 +31,8 @@ public class CombatScript : MonoBehaviour
         yield return new WaitForSeconds(t);
         movementScript.parrying = false;
     }
-    
+    public void SoundEvent()
+    {
+        aud.SlashSound();
+    }
 }

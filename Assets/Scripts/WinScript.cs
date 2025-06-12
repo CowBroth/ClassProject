@@ -7,7 +7,7 @@ public class WinScript : MonoBehaviour
     {
         if (other.CompareTag("Player"))
         {
-            Application.Quit();
+            SceneManager.LoadScene(2);
         }
     }
 }

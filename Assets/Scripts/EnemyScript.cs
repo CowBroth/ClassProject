@@ -23,6 +23,7 @@ public class EnemyScript : MonoBehaviour
     bool playerBlocking;
     public bool parried;
     public float currentSpeed;
+    public float incDamage = 25;
     void Start()
     {
         detectionRadius = GetComponentInChildren<SphereCollider>();
@@ -74,7 +75,7 @@ public class EnemyScript : MonoBehaviour
         }
         else if (state == BehaviourState.aggro && !attackRange)
         {
-            rb.AddForce(playerDirection * speed);
+            rb.AddForce(playerDirection * speed * Time.deltaTime);
             transform.LookAt(lookAt);
             
             anim.SetBool("Still", false);
@@ -84,11 +85,12 @@ public class EnemyScript : MonoBehaviour
             //currentSpeed = speed / Vector3.Distance(transform.position, player.position);
             if (Vector3.Distance(transform.position, player.position) >= effectiveRange)
             {
-                rb.AddForce(playerDirection * speed);
+                rb.AddForce(playerDirection * speed * Time.deltaTime);
             }
             if (Vector3.Distance(transform.position, player.position) <= effectiveRange)
             {
-                rb.AddForce(new Vector3(playerDirection.x + 3.25f, playerDirection.z + 3.25f).normalized);
+                //rb.AddForce(new Vector3(playerDirection.x + 3.25f, playerDirection.z + 3.25f).normalized);
+                rb.AddForce(-playerDirection * speed / 2 * Time.deltaTime);
             }
             transform.LookAt(lookAt);
             if (actionable)
@@ -99,11 +101,18 @@ public class EnemyScript : MonoBehaviour
             }
         }
     }
-    public void OnStun(int i)
+    public void OnStun(int i, int d)
     {
         if (i == 0)
         {
-            hitPoints -= 25;
+            if (d == 0)
+            {
+                hitPoints -= 25;
+            }
+            if (d == 1)
+            {
+                hitPoints -= 50;
+            }
             actionable = true;
             if (hitPoints <= 0)
             {

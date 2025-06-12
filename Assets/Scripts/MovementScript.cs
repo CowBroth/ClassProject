@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using TMPro;
 using Unity.Cinemachine;
 using UnityEditor;
 using UnityEngine;
@@ -14,6 +15,8 @@ public class MovementScript : MonoBehaviour
     public float blockSpeed;
     public float turnSmoothTime = 1f;
     float turnSmoothVelocity;
+    public AudioPlayer aud;
+    public TMP_Text hpText;
 
     public KeyCode attackKey = KeyCode.Mouse0;
     public KeyCode blockKey = KeyCode.F;
@@ -74,9 +77,11 @@ public class MovementScript : MonoBehaviour
         cc = GetComponent<CharacterController>();
         rideScript = GetComponent<RideGruv>();
         actionable = true;
+        aud = GetComponent<AudioPlayer>();
     }
     public void Update()
     {
+        hpText.text = Convert.ToString(hitPoints);
         Gravity();
         axs = new Vector3(0, orbit.HorizontalAxis.Value, 0);
         if (optionState == OptionState.block)
@@ -185,10 +190,10 @@ public class MovementScript : MonoBehaviour
     }
     void Gravity()
     {
-        grounded = Physics.Raycast(transform.position, Vector3.down, 0.1f, whatIsGround);
+        grounded = Physics.Raycast(transform.position, Vector3.down, 0.25f, whatIsGround);
         Debug.DrawRay(transform.position, Vector3.down * 0.05f, Color.green);
 
-        if (grounded && !rideScript.isRiding)
+        if ((grounded || velocity.y == 0) && !rideScript.isRiding)
         {
             velocity.y = -0.1f;
         }
@@ -209,10 +214,14 @@ public class MovementScript : MonoBehaviour
 
     public void PlayerHit()
     {
+        aud.HitSound();
         hitPoints -= 25;
+        
         print(hitPoints);
         if (hitPoints <= 0)
         {
+            hpText.text = Convert.ToString(hitPoints);
+            aud.DeathSound();
             print("DEATH !!");
             corpse.gameObject.SetActive(true);
             corpse.transform.position = gameObject.transform.position;
@@ -268,6 +277,11 @@ public class MovementScript : MonoBehaviour
     }
     public void OnParry()
     {
+        aud.ParrySound();
         anim.SetTrigger("Parry");
+    }
+    public void OnBlock()
+    {
+        aud.BlockSound();
     }
 }

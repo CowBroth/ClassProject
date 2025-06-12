@@ -23,12 +23,13 @@ public class EnemyHitbox : MonoBehaviour
             {
                 if (playerScript.parrying)
                 {
-                    enemyScript.OnStun(1);
+                    enemyScript.OnStun(1, 0);
                     playerScript.OnParry();
                     print("parried!");
                 }
                 else
                 {
+                    playerScript.OnBlock();
                     print("blocked");
                 }
             }

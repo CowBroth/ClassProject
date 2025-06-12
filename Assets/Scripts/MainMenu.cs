@@ -64,4 +64,8 @@ public class MainMenu : MonoBehaviour
     {
         Application.Quit();
     }
+    public void ReplayButton()
+    {
+        SceneManager.LoadScene(0);
+    }
 }
